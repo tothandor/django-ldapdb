@@ -58,15 +58,21 @@ class Model(django.db.models.base.Model):
 
     def build_rdn(self):
         """
-        Build the Relative Distinguished Name for this entry.
+        Build the Relative Distinguished Name for this entry. 
+	Only one primary key attribute is supported this time.
         """
-        bits = []
+	pk_field = ""
+	pk_value = ""
         for field in self._meta.fields:
             if field.db_column and field.primary_key:
-                bits.append("%s=%s" % (field.db_column, getattr(self, field.name)))
-        if not len(bits):
-            raise Exception("Could not build Distinguished Name")
-        return '+'.join(bits)
+                pk_field = field.db_column
+		pk_value = getattr(self, field.name)
+	if not pk_field:
+		raise Exception("No primary key for model " + a.__class__)
+		
+	rdn = self.dn.replace(',' + self.base_dn, '').split(',') # strip the base_dn from the end, and the current primary key from the beginning
+	rdn[0] = pk_field + '=' + pk_value
+	return ','.join(rdn)
 
     def build_dn(self):
         """
